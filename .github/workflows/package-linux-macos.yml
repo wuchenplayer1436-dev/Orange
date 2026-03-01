@@ -64,10 +64,28 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.41.2
           cache: true
 
+      - name: Git Network Compatibility
+        run: |
+          git config --global http.version HTTP/1.1
+          git config --global http.postBuffer 524288000
+
       - name: Flutter Pub Get
-        run: flutter pub get
+        run: |
+          set -euxo pipefail
+          flutter --version
+          for i in 1 2 3; do
+            if flutter pub get; then
+              exit 0
+            fi
+            echo "flutter pub get failed (attempt $i), retrying..."
+            sleep $((i * 10))
+          done
+          echo "flutter pub get failed after retries, running verbose output..."
+          flutter pub get -v
+          exit 1
 
       - name: SDK Pub Get
         run: |
