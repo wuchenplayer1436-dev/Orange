@@ -39,9 +39,6 @@ jobs:
             os: ubuntu-24.04
             arch: amd64
           - platform: macos
-            os: macos-13
-            arch: amd64
-          - platform: macos
             os: macos-14
             arch: arm64
 
@@ -83,6 +80,12 @@ jobs:
         run: |
           git config --global http.version HTTP/1.1
           git config --global http.postBuffer 524288000
+
+      - name: Ensure Required Asset Dirs
+        run: |
+          mkdir -p assets/cer
+          ls -la assets
+          ls -la assets/cer
 
       - name: Create CI Pub Overrides
         run: |
