@@ -40,6 +40,9 @@ jobs:
             arch: amd64
           - platform: macos
             os: macos-14
+            arch: amd64
+          - platform: macos
+            os: macos-14
             arch: arm64
 
     steps:
@@ -106,6 +109,12 @@ jobs:
           perl -0777 -i -pe 's/\n\s*test:\s*\^[0-9.]+//g' pubspec.yaml
           grep -n "material_color_utilities" pubspec.yaml
           grep -nE "dev_dependencies:|test:" pubspec.yaml || true
+
+      - name: Patch Setup For macOS Target Platform
+        if: matrix.platform == 'macos'
+        run: |
+          perl -0777 -i -pe 's/args:\s*" --description \$archName",/args: " --description \$archName --build-target-platform \${arch == Arch.amd64 ? \"darwin-x64\" : \"darwin-arm64\"}",/g' setup.dart
+          grep -n "build-target-platform" setup.dart
 
       - name: Flutter Pub Get
         run: |
