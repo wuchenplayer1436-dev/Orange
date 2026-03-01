@@ -1,0 +1,110 @@
+name: package-linux-macos
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_env:
+        description: Build environment
+        required: true
+        default: stable
+        type: choice
+        options:
+          - stable
+          - pre
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-linux-macos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: ${{ matrix.platform }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            os: ubuntu-22.04
+            arch: amd64
+          - platform: macos
+            os: macos-13
+            arch: amd64
+          - platform: macos
+            os: macos-latest
+            arch: arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        if: startsWith(matrix.platform, 'macos')
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.20.x"
+          cache: true
+          cache-dependency-path: core/Clash.Meta/go.sum
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter Pub Get
+        run: flutter pub get
+
+      - name: SDK Pub Get
+        run: |
+          cd lib/sdk/flutter_xboard_sdk
+          flutter pub get
+
+      - name: Generate SDK Code
+        run: |
+          cd lib/sdk/flutter_xboard_sdk
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate Main Project Code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Package
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUILD_ENV="${{ github.event.inputs.build_env }}"
+          else
+            if [[ "${{ github.ref_name }}" == *-* ]]; then
+              BUILD_ENV="pre"
+            else
+              BUILD_ENV="stable"
+            fi
+          fi
+          echo "build env: $BUILD_ENV"
+          dart run setup.dart ${{ matrix.platform }} --arch ${{ matrix.arch }} --out app --env "$BUILD_ENV"
+
+      - name: List Dist Files
+        run: |
+          echo "dist files:"
+          ls -lah dist || true
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/**
+          if-no-files-found: error
+          overwrite: true
