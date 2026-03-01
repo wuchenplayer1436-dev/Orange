@@ -27,6 +27,9 @@ jobs:
     name: ${{ matrix.platform }}-${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
+    env:
+      PUB_HOSTED_URL: https://pub.dev
+      FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
     strategy:
       fail-fast: false
       matrix:
@@ -71,6 +74,15 @@ jobs:
         run: |
           git config --global http.version HTTP/1.1
           git config --global http.postBuffer 524288000
+
+      - name: Create CI Pub Overrides
+        run: |
+          cat > pubspec_overrides.yaml <<'EOF'
+          dependency_overrides:
+            flutter_js: 0.8.3
+            re_editor: 0.7.0
+          EOF
+          cat pubspec_overrides.yaml
 
       - name: Flutter Pub Get
         run: |
