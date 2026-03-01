@@ -32,7 +32,7 @@ jobs:
       FLUTTER_STORAGE_BASE_URL: https://storage.googleapis.com
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 3
       matrix:
         include:
           - platform: linux
