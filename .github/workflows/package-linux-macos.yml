@@ -84,8 +84,12 @@ jobs:
       - name: Ensure Required Asset Dirs
         run: |
           mkdir -p assets/cer
+          if [ ! -f assets/config/xboard.config.yaml ]; then
+            cp assets/config/xboard.config.example.yaml assets/config/xboard.config.yaml
+          fi
           ls -la assets
           ls -la assets/cer
+          ls -la assets/config
 
       - name: Create CI Pub Overrides
         run: |
