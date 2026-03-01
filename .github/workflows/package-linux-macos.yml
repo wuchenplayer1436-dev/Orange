@@ -35,10 +35,10 @@ jobs:
             os: ubuntu-22.04
             arch: amd64
           - platform: macos
-            os: macos-13
+            os: macos-15-intel
             arch: amd64
           - platform: macos
-            os: macos-latest
+            os: macos-15
             arch: arm64
 
     steps:
@@ -82,8 +82,17 @@ jobs:
       - name: Generate Main Project Code
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Toolchain Debug
+        run: |
+          set -euxo pipefail
+          uname -a || true
+          flutter --version
+          dart --version
+          go version
+
       - name: Package
         run: |
+          set -euxo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             BUILD_ENV="${{ github.event.inputs.build_env }}"
           else
