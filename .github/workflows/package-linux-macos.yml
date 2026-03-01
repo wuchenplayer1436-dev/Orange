@@ -105,6 +105,7 @@ jobs:
         run: |
           cat > pubspec_overrides.yaml <<'EOF'
           dependency_overrides:
+            material_color_utilities: 0.13.0
             flutter_js:
               path: .ci_deps/flutter_js
             re_editor:
