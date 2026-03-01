@@ -36,13 +36,13 @@ jobs:
       matrix:
         include:
           - platform: linux
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             arch: amd64
           - platform: macos
-            os: macos-15-intel
+            os: macos-13
             arch: amd64
           - platform: macos
-            os: macos-15
+            os: macos-14
             arch: arm64
 
     steps:
@@ -64,11 +64,19 @@ jobs:
           cache: true
           cache-dependency-path: core/Clash.Meta/go.sum
 
+      - name: Install Linux Linker And Build Deps
+        if: matrix.platform == 'linux'
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y lld-18 clang-18 llvm-18
+          ls -l /usr/lib/llvm-18/bin/ld.lld
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.29.3
+          flutter-version: 3.41.2
           cache: true
 
       - name: Git Network Compatibility
